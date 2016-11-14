@@ -7,8 +7,21 @@
 ...문제점
 ....그냥 frequency 줘서 Start버튼 눌러서 실행 시 숫자 입력이 제대로 되지 않는 듯 함. chk요망
 
-TEST	START	0
+..........Ver1.3.................
 
+...추가 사항...
+....깜박하고 안적어서;
+....우선 Input 받은 거 Print까지 완료
+
+...문제점...
+....여전히 frequency를 주어야 정상 작동한다.
+....미리 값을 입력해놓으면 정상 작동하지만 멈춘 뒤 입력하려고 하면 불가능하다.
+....계속 알아볼 것.
+
+TEST	START	0
+FIRST	JSUB	INSAMP
+	JSUB	INSERT
+	END	TEST
 
 
 
@@ -29,6 +42,8 @@ IMSPRT	LDA	IMSTXT, X
 	WD	OUTDEV
 	TIX	IMSLEN
 	JLT	IMSPRT
+	CLEAR	A
+	CLEAR	X
 INLOOP	TD	INDEV
 	JEQ	INLOOP
 	RD	INDEV
@@ -147,6 +162,11 @@ EOFCHK	RD	#0
 	COMP	#79
 	JEQ	EOFCHK
 	COMP	#70
+	CLEAR	A
+	CLEAR	X
+	LDA	#3
+	MUL	INPNUM
+	STA	INPLEN
 	JEQ	ENDINP
 	J	CLERDY
 
@@ -168,12 +188,55 @@ CLETMP	STA	TMPNUM, X
 ..EXIT LOOP는 현재 숫자 받아오는 것이 끝난 상태이며 임시로 저장해놓은 이름이고 바뀔 수도 있다.
 ...RSUB 추가 예정 ver1.1
 ...RSUB 추가 ver1.3
-ENDINP	RSUB	
+ENDINP	LDA	#0
+	STA	TMPNUM
+	STA	FIGURE
+	LDA	#100
+	STA	FIGURE
+	LDA	#STR1
+	STA	NUMADD
+	..X는 input 개수 chk해야되니까 indirect로
+	.MULR	A, X
+	.LDA	STR1, X
+	LDA	#3
+	MULR	X, A
+	ADD	NUMADD
+	STA	NUMADD
+	LDA	@NUMADD
+	STA	TMPNUM
+	CLEAR	S
+	LDA	#32
+	WD	OUTDEV
+CALFIG	LDA	TMPNUM
+	DIV	FIGURE
+	COMP	#0
+	JEQ	JZERO
+	CLEAR	T
+	CLEAR	S
+	ADDR	A, T
+	MUL	FIGURE
+	ADDR	A, S
+	LDA	TMPNUM
+	SUBR	S, A
+	STA	TMPNUM
+	CLEAR	A
+	ADDR	T, A
+	ADD	#48
+	WD	OUTDEV
+JZERO	LDA	FIGURE
+	DIV	#10
+	STA	FIGURE
+	COMP	#0
+	JGT	CALFIG
+	TIX	INPNUM
+	JLT	ENDINP
+	RSUB	
 
 ZERO	WORD	0		.ZERO 필요없지 않나?
 STAADD	RESW	1		.각 SAMPLE Input 시작 주소 Index값
 NUMADD	RESW	1		.각 SAMPLE Input 숫자 시작 주소 Index값
-.INPLEN	RESW	1		.각 SAMPLE 숫자 길이
+				.ver1.3 출력용 indirect 주소저장소로 사
+INPLEN	RESW	1		.각 SAMPLE 숫자 길이
 INPNUM	WORD	0		.각 SAMPLE Input 개수
 TMPNUM	RESW	1		.숫자를 임시로 저장해둔다.
 .MULDIG	WORD	1
@@ -193,14 +256,16 @@ STR12	RESW	1
 STR13	RESW	1
 STR14	RESW	1
 STR15	RESW	1
+FIGURE	WORD	100
 INDEV	BYTE	X'00'
 OUTDEV	BYTE	X'01'
-MULNUM	BYTE	X'10'
+.MULNUM	BYTE	X'10'
+
 
 IMSTXT	BYTE	C'  Input을 입력해주세요.(3자리까지 가능합니다)'		.Input MaSsage Text
 	BYTE	10
 	BYTE	C'형식 : num num num num num EOF'
 	BYTE	10
-	BYTE	C'(띄어쓰기로 구분해주시면 되고 15개까지 가능하며 끝은 EOF로 표시합니다)'
-	BYTE	10
+	.BYTE	C'(띄어쓰기로 구분해주시면 되고 15개까지 가능하며 끝은 EOF로 표시합니다)'
+	.BYTE	10
 IMSLEN	RESW	1
