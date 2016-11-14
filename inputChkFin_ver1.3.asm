@@ -8,14 +8,30 @@
 ....그냥 frequency 줘서 Start버튼 눌러서 실행 시 숫자 입력이 제대로 되지 않는 듯 함. chk요망
 
 TEST	START	0
+
+
+
+
+
+
+
+
+
+
+....................Input Processing........................
 INSAMP	CLEAR	X
 	CLEAR	A
 	LDT	#5
+INPMSG	LDA	#IMSLEN
+	SUB	#IMSTXT
+	STA	IMSLEN
+IMSPRT	LDA	IMSTXT, X
+	WD	OUTDEV
+	TIX	IMSLEN
+	JLT	IMSPRT
 INLOOP	TD	INDEV
 	JEQ	INLOOP
 	RD	INDEV
-	COMP	#2
-	JLT	INLOOP
 	COMP	#69	.'E' EOF 체크를 위해서 비교
 	JEQ	EOFCHK
 	COMP	#32	.공백을 나타내는 아스키값
@@ -119,7 +135,7 @@ STRSAM	LDA	TMPNUM
 	ADD	#1	.Input Number 1 증가
 	STA	INPNUM
 	COMP	#15	.Sample의 숫자가 15개가 넘어가면 종료한다.
-	JGT	EXITLP
+	JGT	ENDINP
 	CLEAR	S
 	J	CLERDY
 
@@ -131,7 +147,7 @@ EOFCHK	RD	#0
 	COMP	#79
 	JEQ	EOFCHK
 	COMP	#70
-	JEQ	EXITLP
+	JEQ	ENDINP
 	J	CLERDY
 
 .CLERDY
@@ -151,7 +167,8 @@ CLETMP	STA	TMPNUM, X
 .EXITLP
 ..EXIT LOOP는 현재 숫자 받아오는 것이 끝난 상태이며 임시로 저장해놓은 이름이고 바뀔 수도 있다.
 ...RSUB 추가 예정 ver1.1
-EXITLP	END	TEST	
+...RSUB 추가 ver1.3
+ENDINP	RSUB	
 
 ZERO	WORD	0		.ZERO 필요없지 않나?
 STAADD	RESW	1		.각 SAMPLE Input 시작 주소 Index값
@@ -179,3 +196,11 @@ STR15	RESW	1
 INDEV	BYTE	X'00'
 OUTDEV	BYTE	X'01'
 MULNUM	BYTE	X'10'
+
+IMSTXT	BYTE	C'  Input을 입력해주세요.(3자리까지 가능합니다)'		.Input MaSsage Text
+	BYTE	10
+	BYTE	C'형식 : num num num num num EOF'
+	BYTE	10
+	BYTE	C'(띄어쓰기로 구분해주시면 되고 15개까지 가능하며 끝은 EOF로 표시합니다)'
+	BYTE	10
+IMSLEN	RESW	1
