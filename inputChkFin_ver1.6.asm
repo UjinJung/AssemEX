@@ -303,7 +303,9 @@ LOSTEP	LDA	TMPNXT
 	STA	@TMPNXT
 	LDA	PIVIND
 	ADD	#3
-	STA	PIVIND
+	STA	PIVIND	.먼저 프린트하고 L reg값 조작해서 RSUB로 돌아오면 되니까; 그리고 나서 증가시킬까...
+	LDA	#91
+	WD	OUTDEV
 	J	PRINT
 .PRINT에서 마지막 값인지 끝부분에서 chk
 .PRINT	LDA	#0
