@@ -41,7 +41,7 @@
 
 TEST	START	0
 FIRST	JSUB	INSAMP
-	JSUB	INSERT
+	JSUB	INSRDY
 	END	TEST
 
 ....................Input Processing........................
@@ -323,7 +323,7 @@ LOSTEP	LDA	TMPNXT
 	STA	RETADD
 	LDA	#91
 	WD	OUTDEV
-	JSUB	PRINT
+	JSUB	ENDINP
 	LDA	#93
 	WD	OUTDEV
 .PRINT에서 마지막 값인지 끝부분에서 chk
