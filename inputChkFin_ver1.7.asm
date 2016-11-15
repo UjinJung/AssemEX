@@ -39,9 +39,14 @@
 
 ...문제점... 
 
+
+..........Ver1.7.................
+...frequency
+...
+
 TEST	START	0
 FIRST	JSUB	INSAMP
-	JSUB	INSERT
+	JSUB	INSRDY
 	END	TEST
 
 ....................Input Processing........................
@@ -59,7 +64,7 @@ IMSPRT	LDA	IMSTXT, X
 	CLEAR	X
 INLOOP	TD	INDEV
 	JEQ	INLOOP
-	RD	INDEV
+	RD	#0
 	COMP	#69	.'E' EOF 체크를 위해서 비교
 	JEQ	EOFCHK
 	COMP	#32	.공백을 나타내는 아스키값
@@ -227,6 +232,7 @@ ENDINP	LDA	#0
 	J	CALFIG
 PIVMAK	LDA	#124
 	WD	OUTDEV
+	
 .CALFIG
 ..CALculate FIGure 는 자릿수를 계산해서 저장한 뒤 출력해준다.
 CALFIG	LDA	TMPNUM	.TMPNUM을 불러와서 현재 자릿수(Figure)로 나누어준다.
@@ -291,27 +297,31 @@ INSERT	CLEAR	A
 ...., 옮기기 후 1이면 작다로 이동
 ...작으면 @(TMPIND+3) = PIVNUM 후 PIVIND = PIVIND+3 후 TMPIND클리어 후 큰 LOOP(INSERT)로 이동
 STEP	CLEAR	S
-	LDT	@TMPNXT
 	SUB	#3
 	STA	TMPIND
-	LDA	@TMPIND
-	COMP	STR1
+	LDT	PIVNUM
+	LDA	TMPIND
+	COMP	#STR1
+	JEQ	NOEND
 	JGT	NOEND
 	LDS	#3	.작다에서 끝일 경우에 그냥 넣어야되니까		
-NOEND	COMPR	A, T
+NOEND	LDA	@TMPIND
+	COMPR	A, T
 	JLT	LOSTEP
 	.A가 크면?
 	.@(TMPIND+3)(TMPNXT) = @TMPIND
 	LDA	@TMPIND
 	STA	@TMPNXT
+	LDA	PIVNUM
+	STA	@TMPIND
 	CLEAR	A
 	COMPR	A, S
 	JGT	LOSTEP
-	LDA	TMPNXT
-	STA	TMPIND
-	JEQ	STEP
+	LDA	TMPIND
+	STA	TMPNXT
+	J	STEP
 LOSTEP	LDA	TMPNXT
-	SUBR	S, A
+	.SUBR	S, A
 	STA	TMPNXT
 	LDA	PIVNUM
 	STA	@TMPNXT
@@ -321,11 +331,23 @@ LOSTEP	LDA	TMPNXT
 	CLEAR	A
 	ADDR	L, A
 	STA	RETADD
+	LDA	#10
+	WD	OUTDEV
 	LDA	#91
 	WD	OUTDEV
-	JSUB	PRINT
+	CLEAR	X
+	JSUB	ENDINP
 	LDA	#93
 	WD	OUTDEV
+	LDL	RETADD
+	
+.Pivot이 마지막 값인지 체크
+	LDA	NUMADD
+	ADD	#3
+	COMP	PIVIND
+	JGT	INSERT
+	RSUB
+	.J	INSERT
 .PRINT에서 마지막 값인지 끝부분에서 chk
 .PRINT	LDA	#0
 .	STA	TMPNUM
@@ -354,6 +376,7 @@ ZERO	WORD	0		.ZERO 필요없지 않나?
 STAADD	RESW	1		.각 SAMPLE Input 시작 주소 Index값
 NUMADD	RESW	1		.각 SAMPLE Input 숫자 시작 주소 Index값
 				.ver1.3 출력용 indirect 주소저장소로 사
+ENDADD	RESW	1
 INPLEN	RESW	1		.각 SAMPLE 숫자 길이
 INPNUM	WORD	0		.각 SAMPLE Input 개수
 TMPNUM	RESW	1		.숫자를 임시로 저장해둔다.
