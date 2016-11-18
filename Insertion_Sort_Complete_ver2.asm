@@ -44,6 +44,11 @@
 ...frequency 해결
 ...아... 중간에 0 있으면 표시 안됨,. 고쳐야 할듯 0이면 무조건 반환하는 거 고치기
 
+
+..........Insertion....
+...0출력 안되던거 수정
+
+
 TEST	START	0
 FIRST	JSUB	INSAMP
 	JSUB	INSRDY
@@ -71,10 +76,6 @@ INLOOP	TD	INDEV
 	JEQ	ENDFIL
 	COMP	#0
 	JEQ	INLOOP
-.여기서 너무 길면 체크해줘야 할 거 같은데;
-.LDS	#10
-.COMP	X, S
-.이런거라도 해줘야 하지 않을까..?
 	COMP	#48	.'0' 보다 작으면 JUNK처리
 	JLT	JUNK
 	COMP	#57	.'9' 보다 크면 JUNK처리
@@ -83,19 +84,12 @@ INLOOP	TD	INDEV
 	CLEAR	S
 	ADDR	A, S	.S에 A값(읽어온 값)을 옮겨놓음
 	CLEAR	A	.A 초기화
-	.COMPR	A, X
-	.JEQ	STRTMP
-	.LDA	TMPNUM
-	.SHIFTL	A, 8 
-	.STA	TMPNUM
 
 .STRTMP
 ..A에 TMPNUM 예전꺼 집어넣고 10곱해줘서 자릿수 맞추어줌
 ...6자리 넘어갈 경우 JUNK처리하고 버림
 ....그리고 S에 있던 이번에 읽어온 값을 1의 자리에 넣어주는 형식
 STRTMP	LDA	TMPNUM
-	.MULR	A, S
-	.LDA	TMPNUM
 	MUL	#10
 	ADDR	S, A
 	TIXR	T	.6자리 이상이면 JUNK처리
@@ -117,30 +111,16 @@ JUNK	LDA	#1
 ....1줄씩 옮겨가려면 3byte를 이동해야해서 3에 input 숫자를 곱해준다.(0부터 시작; 0 = 1개, 1 = 2개)
 .....STArt ADDress에 첫번째 변수의 주소를 immediate addressing 을 통해 더해준다.
 ENDFIL	CLEAR	A
-	.STA	MULDIG
 	LDA	JUKCHK	.Junk인지 check
 	COMP	#1
 	JEQ	CLERDY	.Junk면 다 폐기
 	CLEAR	A
-	.ADDR	X, A
-	.STA	INPLEN
-	.LDA	#3
-	.SUBR	X, A
-	.STA	NUMADD
 	LDA	#3	.시작주소 계산을 위해서
 	MUL	INPNUM	.INPut NUMber 는 0부터 시작하며 Input의 개수를 나타낸다.
-	.SUB	#3
-	.STA	STAADD
-	.LDX	STAADD
-	.CLEAR	A
 .ZERFIL	STA	STR1, X
 .	TIX	NUMADD
 .	JLT	ZERFIL
 .INDEX + 주소값
-	.LDA	STAADD	
-	.ADD	NUMADD
-	.LDS	#STR1	.변수 시작 주소를 더해줍니다.
-	.ADDR	S, A
 	STA	STAADD
 .숫자 저장
 	CLEAR	X
@@ -151,19 +131,10 @@ ENDFIL	CLEAR	A
 ....최대로 받을 수 있는 숫자의 개수는 15개로 한정하고 15개가 넘어가면 값을 받아오는 것을 종료한다.
 .....그렇지 않으면 CLEar ReaDY로 이동해서 Temp Number를 초기화한다.
 STRSAM	LDA	TMPNUM
-
 	..그냥 Index로 해도 될 듯
 	...처음에는 Indirect로 하려고 했으나 그렇게까지 할 필요가..?
 	LDX	STAADD
 	STA	STR1, X
-	..	
-	..STA	@STAADD
-
-	.TIX	INPLEN
-	.LDA	NUMADD
-	.ADD	#1
-	.STA	NUMADD
-	.JLT	STRSAM
 	LDA	INPNUM
 	ADD	#1	.Input Number 1 증가
 	STA	INPNUM
@@ -182,11 +153,11 @@ EOFCHK	RD	#0
 	COMP	#70
 	CLEAR	A
 	CLEAR	X
-	LDA	#3
-	MUL	INPNUM
-	STA	INPLEN
+	.LDA	#3
+	.MUL	INPNUM
+	.STA	INPLEN
 	JEQ	ENDINP
-	J	CLERDY
+	.J	CLERDY
 
 .CLERDY
 ..CLEar ReaDY는 Temp Number를 초기화하기 전 준비 단계이다.
@@ -215,8 +186,6 @@ ENDINP	LDA	#0
 	LDA	#STR1	
 	STA	NUMADD	.STR1 주소 불러와서 NUMADD에 저장
 	..X는 input 개수 chk해야되니까 indirect로
-	.MULR	A, X
-	.LDA	STR1, X
 	LDA	#3	
 	MULR	X, A	.X는 몇번째 Sample인지 나타내고 3을 곱해주어서 해당 주소로 이동하게 한다.
 	ADD	NUMADD
@@ -234,16 +203,25 @@ PIVMAK	LDA	#124
 	WD	OUTDEV
 	LDA	#32
 	WD	OUTDEV
-	
+	LDA	#0
+	STA	INPLEN
 .CALFIG
 ..CALculate FIGure 는 자릿수를 계산해서 저장한 뒤 출력해준다.
-CALFIG	LDA	TMPNUM	.TMPNUM을 불러와서 현재 자릿수(Figure)로 나누어준다.
+CALFIG	CLEAR	T
+	LDA	TMPNUM	.TMPNUM을 불러와서 현재 자릿수(Figure)로 나누어준다.
 	DIV	FIGURE
+	ADDR	A, T	.T reg에 A reg 값을 할당한다.(현재 A reg값은 해당 자릿수의 값이다)
+	LDA	INPLEN
+	COMP	#0
+	JGT	PRTNUM
+	CLEAR	A
+	ADDR	T, A
 	COMP	#0	.만약 0이면 해당 자릿수에 값이 없는 것이니 JZERO로 넘어간다.
 	JEQ	JZERO
-	CLEAR	T	.T, S reg 초기화
-	CLEAR	S
-	ADDR	A, T	.T reg에 A reg 값을 할당한다.(현재 A reg값은 해당 자릿수의 값이다)
+	STA	INPLEN
+PRTNUM	CLEAR	S
+	CLEAR	A
+	ADDR	T, A
 	MUL	FIGURE	.해당 자릿수의 값을 다시 곱해주어 200, 10, 40 이런 식으로 나타나게 한다.
 	ADDR	A, S	.해당 값을 S reg에 할당한 뒤 TMPNUM값에서 빼주어 해당 자릿수를 없앤다.
 	LDA	TMPNUM	
@@ -260,9 +238,11 @@ CALFIG	LDA	TMPNUM	.TMPNUM을 불러와서 현재 자릿수(Figure)로 나누어�
 JZERO	LDA	FIGURE	
 	DIV	#10
 	STA	FIGURE
-	COMP	#0
+	COMP	#0 
 	JGT	CALFIG
 	TIX	INPNUM
+	CLEAR	A
+	STA	INPLEN
 	JLT	ENDINP
 	RSUB	
 
@@ -278,8 +258,6 @@ INSRDY	CLEAR	A
 	STA	TMPNUM
 	LDA	#STR2
 	STA	PIVIND
-	.SUB	#3	.필요 없을 듯?
-	.STA	TMPIND
 ....큰 LOOP 시작과 동시에 작은 LOOP 준비?
 ....큰 LOOP는 밑에서 비교해서 값 추가하는 방식으로 하고
 ....작은 LOOP는 건너뛰는 방식으로
@@ -289,7 +267,6 @@ INSERT	CLEAR	A
 	LDA	@PIVIND
 	STA	PIVNUM
 	LDA	PIVIND
-	.SUB	#3	.밑에서 plus된 값을 저장 후 빼는 게 나을 듯
 	STA	TMPNXT
 ..작은 LOOP시작
 ...@TMPIND 값이랑 @(TMPIND+3)값이랑 비교
@@ -323,7 +300,6 @@ NOEND	LDA	@TMPIND
 	STA	TMPNXT
 	J	STEP
 LOSTEP	LDA	TMPNXT
-	.SUBR	S, A
 	STA	TMPNXT
 	LDA	PIVNUM
 	STA	@TMPNXT
@@ -350,32 +326,10 @@ LOSTEP	LDA	TMPNXT
 	ADD	#3
 	COMP	PIVIND
 	JGT	INSERT
+	LDA	#10
+	WD	OUTDEV
 	RSUB
-	.J	INSERT
-.PRINT에서 마지막 값인지 끝부분에서 chk
-.PRINT	LDA	#0
-.	STA	TMPNUM
-.	STA	FIGURE
-.	LDA	#100
-.	STA	FIGURE
-.	LDA	#STR1
-.	STA	NUMADD
-.	LDA	#3
-.	MULR	X, A
-.	ADD	NUMADD
-.	STA	NUMADD
-.	LDA	@NUMADD
-.	STA	TMPNUM
-.	CLEAR	S
-.	LDA	#32
-.	WD	OUTDEV
-.Sort 끝난거 구분 좀 해줘야되는데;;
-
-
-
-
 	
-
 ZERO	WORD	0		.ZERO 필요없지 않나?
 STAADD	RESW	1		.각 SAMPLE Input 시작 주소 Index값
 NUMADD	RESW	1		.각 SAMPLE Input 숫자 시작 주소 Index값
@@ -384,7 +338,6 @@ ENDADD	RESW	1
 INPLEN	RESW	1		.각 SAMPLE 숫자 길이
 INPNUM	WORD	0		.각 SAMPLE Input 개수
 TMPNUM	RESW	1		.숫자를 임시로 저장해둔다.
-.MULDIG	WORD	1
 PIVIND	RESW	1		.PIVot INDex
 PIVNUM	RESW	1
 TMPIND	RESW	1
@@ -410,13 +363,11 @@ STRLEN	RESW	1
 FIGURE	WORD	100
 INDEV	BYTE	X'00'
 OUTDEV	BYTE	X'01'
-.MULNUM	BYTE	X'10'
-
 
 IMSTXT	BYTE	C'  Input을 입력해주세요.(3자리까지 가능합니다)'		.Input MaSsage Text
 	BYTE	10
 	BYTE	C'형식 : num num num num num EOF'
 	BYTE	10
-	.BYTE	C'(띄어쓰기로 구분해주시면 되고 15개까지 가능하며 끝은 EOF로 표시합니다)'
-	.BYTE	10
+	BYTE	C'(띄어쓰기로 구분해주시면 되고 15개까지 가능하며 끝은 EOF로 표시합니다)'
+	BYTE	10
 IMSLEN	RESW	1
