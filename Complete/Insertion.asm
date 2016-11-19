@@ -50,36 +50,12 @@
 
 
 TEST	START	0
-FIRST	
-	JSUB	INSAMP	.Input
-
-
-
-....................Insertion Sorting Ready............................
-
-INSMSG	LDA	#10
-	WD	OUTDEV
-	WD	OUTDEV
-	CLEAR	X
-	LDA	#INSLEN
-	SUB	#INSTXT
-	STA	INSLEN
-INSPRT	LDA	INSTXT,	X	
-	WD	OUTDEV
-	TIX	INSLEN
-	JLT	INSPRT	
-	CLEAR	A
-	CLEAR	X
+FIRST	JSUB	INSAMP
 	JSUB	INSRDY
 	JSUB	INSAMP
 	JSUB	INSRDY
-
-
-....................END........................
-	END	TEST
-EXIT	J	EXITTW	
-EXITTW	J	EXIT
-...............................................
+	LDA	#0
+		
 
 ....................Input Processing........................
 INSAMP	CLEAR	X
@@ -87,8 +63,10 @@ INSAMP	CLEAR	X
 	LDT	#5
 INPMSG	LDA	#10
 	WD	OUTDEV
-	TIX	#25
+	TIX	#35
 	JLT	INPMSG
+	LDA	#196
+	WD	OUTDEV
 	CLEAR	X
 	CLEAR	A
 	LDA	#IMSLEN
@@ -357,7 +335,7 @@ LOSTEP	LDA	TMPNXT
 	STA	PIVIND	.먼저 프린트하고 L reg값 조작해서 RSUB로 돌아오면 되니까; 그리고 나서 증가시킬까...
 	CLEAR	A
 	ADDR	L, A
-	STA	RETADD	
+	STA	RETADD
 	LDA	#10
 	WD	OUTDEV
 	LDA	#91
@@ -420,6 +398,3 @@ IMSTXT	BYTE	C'  Input을 입력해주세요.(3자리까지 가능합니다)'		.I
 	BYTE	C'(띄어쓰기로 구분해주시면 되고 15개까지 가능하며 끝은 EOF로 표시합니다)'
 	BYTE	10
 IMSLEN	RESW	1
-INSTXT	BYTE	C'  Insertion Sort'
-	BYTE	10
-INSLEN	RESW	1
