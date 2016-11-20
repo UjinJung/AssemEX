@@ -538,6 +538,95 @@ NOCHAN	LDA	TMPNXT
 	WD	OUTDEV
 	J	RESMSG
 
+....................Merge Sort Processing.......................
+
+MEGRDY	CLEAR	A
+	CLEAR	X
+	LDA	INPNUM
+	STA	MEGNUM	.처음에 인풋 전체 길이를 받아옴
+	
+MERGE	LDA	MEGNUM	.지워도 됨
+	COMP	#3
+	JLT	CALMEG	.CALMEG로 이동 (3보다 작으면 1,2개 있다는 거니까 바로 계산해서 출력가능)
+	.해당 LOOP의 정보를 스택에 저장
+	CLEAR	A
+	CLEAR	T
+	ADDR	L, T
+	SHIFTL	T, 3
+	LDA	STAADD
+	ADDR	T, A
+	STA	@MEGIND
+	LDA	#3
+	ADD	MEGIND
+	STA	MEGIND
+	LDA	MEGNUM
+	STA	@MEGIND
+	LDA	#1
+	ADD	MEGIND
+	STA	MEGIND
+
+..이제 나누기 시작
+. 첫번째 덩어리
+	LDA	MEGNUM
+	DIV	#2
+	STA	MEGNUM
+	JSUB	MERGE
+..두번째 덩어리
+	LDA	MEGNUM
+	MUL	#3
+	ADD	STAADD
+	STA	STAADD
+	LDA	#3
+	ADD	MEGIND
+	STA	MEGIND	.Length를 구하기 위해서(해당 Loop의 전체 Length - (전체 Length/2)를 해주면 남은 Length가 나온다)
+	LDA	@MEGIND
+	STA	MEGNUM
+	LDA	#1
+	ADD	MEGIND
+	STA	MEGIND
+	LDA	MEGNUM
+	DIV	#2
+	STA	TMPNUM
+	LDA	MEGNUM
+	SUB	TMPNUM
+	STA	MEGNUM
+	JSUB	MERGE
+
+	.변수 만들어주기(각 덩어리 처음 값 마지막 값, 길이?)
+	..두번째 덩어리
+	LDA	STAADD
+	STA	MINDT
+	LDA	MEGNUM
+	SUB	#1	.마지막 값을 나타내려면
+	MUL	#3
+	ADD	STAADD
+	STA	MENDT
+	.첫번째 덩어리
+	LDA	X'000111'
+	AND	@MEGIND
+	STA	MINDO	.Start Address
+	LDA	@MEGIND
+	SUB	MINDO
+	SHIFTR	A, 3
+	STA	@MEGIND
+	LDL	@MEGIND	.Return Address
+	LDA	MEGIND
+	ADD	#3
+	STA	MEGIND
+	LDA	@MEGIND
+	SUB	#1
+	MUL	#3
+	ADD	MINDO
+	STA	MENDO
+	LDA	MEGIND
+	SUB	#3
+	STA	MEGIND
+	.계산 끝나고 4 뒤로 밀것
+CALMEG		
+
+
+
+.-----------------Result----------------------
 
 RESMSG	CLEAR	X
 	CLEAR	A
@@ -587,6 +676,23 @@ PIVNUM	RESW	1
 TMPIND	RESW	1
 TMPNXT	RESW	1
 JUKCHK	WORD	0		.Junk인지 chk하기 위한 변수 (0 = not junk, 1 = junk)
+
+.Merge Sort
+MINDO	RESW	1
+MENDO	RESW	1
+MINDT	RESW	1
+MENDT	RESW	1
+MEGNUM	RESW	1
+.STACK?
+MEGIND	RESW	1	.ReturnAddress(3) | StartAddress(3)
+	BYTE	00	.각 덩어리 길이
+	RESW	1
+	BYTE	00
+	RESW	1
+	BYTE	00
+	RESW	1
+	BYTE	00
+
 STR1	RESW	1		.배열 시작
 STR2	RESW	1
 	RESW	1
@@ -603,37 +709,21 @@ STR2	RESW	1
 	RESW	1
 	RESW	1
 STRLEN	RESW	1
+
 FIGURE	WORD	100
 INDEV	BYTE	X'00'
 OUTDEV	BYTE	X'01'
 RETADD	RESW	1	.Main으로 Return Address
 PREADD	RESW	1	.Print하고 Sort로 Return Address
-
-.--- 주소값 더 쓸거라 여기서 문제 될 수도.
-.Merge 용 Return Address
-MEGINF	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-	RESW	1
-
 CHOTXT	BYTE	C'  실행하고자 하는 정렬 방식을 입력해주십시오.'
 	BYTE	10
 	BYTE	C'  1. Insertion Sort'
 	BYTE	10
 	BYTE	C'  2. Bubble Sort'
 	BYTE	10
-	BYTE	C'  3. EXIT'
+	BYTE	C'  3. Merge Sort'
+	BYTE	10
+	BYTE	C'  4. EXIT'
 	BYTE	10
 CHOLEN	RESW	1
 IMSTXT	BYTE	C'  Input을 입력해주세요.(3자리까지 가능합니다)'		.Input MaSsage Text
@@ -652,3 +742,6 @@ INSLEN	RESW	1
 BUBTXT	BYTE	C'  Bubble Sort'
 	BYTE	10
 BUBLEN	RESW	1
+MEGTXT	BYTE	C'  Merge Sort'
+	BYTE	10
+MEGLEN	RESW	1
