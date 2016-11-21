@@ -50,8 +50,7 @@
 
 
 TEST	START	0
-FIRST	
-	JSUB	INSAMP	.Input
+FIRST	JSUB	INSAMP	.Input
 
 
 
