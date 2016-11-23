@@ -1,8 +1,6 @@
 
 MERSOT	START	0
 
-.CHOice MaSsaGe
-..수행하고자 하는 Sorting Algorithm을 선택한다.
 CHOMSG	LDA	#95
 	WD	OUTDEV
 	TIX	#55
@@ -12,7 +10,7 @@ CHOMSG	LDA	#95
 	WD	OUTDEV
 	WD	OUTDEV
 	CLEAR	X
-	LDA	#CHOLEN	.CHOLEN에 TXT길이를 저장한다.
+	LDA	#CHOLEN
 	SUB	#CHOTXT
 	STA	CHOLEN
 CHOPRT	LDA	CHOTXT, X
@@ -26,29 +24,25 @@ CHOPRT	LDA	CHOTXT, X
 CHOICE	TD	#0
 	JEQ	CHOICE
 	RD	#0
-	STA	TMPNUM	
-	.1, 2만 입력을 받음.
-	COMP	#50	.2까지
+	STA	TMPNUM
+	COMP	#53	.5까지/?
 	JGT	CHOICE
 	COMP	#49
 	JLT	CHOICE
-	.1이면 CHOSOT으로 이동한다.
 	JEQ	@TMPIND
+	LDA	TMPIND
+	ADDR	T, A
+	STA	TMPIND
+	LDA	TMPNUM
 	COMP	#50
 	JEQ	EXIT
 	
-CHOSOT	LDA	#10
-	WD	OUTDEV
-	JSUB	MEGMSG
+CHOSOT	JSUB	MEGMSG
 	CLEAR	X
-	LDA	#10
-	WD	OUTDEV
-	WD	OUTDEV
-	JSUB	RESMSG
 	J	CHOMSG
 
 ....................END........................
-	END	MERSOT
+	END	TEST
 EXIT	J	EXITTW	
 EXITTW	J	EXIT
 ...............................................
@@ -56,12 +50,14 @@ EXITTW	J	EXIT
 ....................Input Processing........................
 .Input Msg 출력
 INSAMP	CLEAR	X
+	.CLEAR	A
 	LDT	#5
 INPMSG	LDA	#10	
 	WD	OUTDEV
 	TIX	#2
 	JLT	INPMSG
 	CLEAR	X
+	.CLEAR	A
 	LDA	#IMSLEN
 	SUB	#IMSTXT
 	STA	IMSLEN
@@ -69,6 +65,7 @@ IMSPRT	LDA	IMSTXT, X
 	WD	OUTDEV
 	TIX	IMSLEN
 	JLT	IMSPRT
+	.CLEAR	A
 	CLEAR	X
 .#STAADD ~ #FIGURE CLEAR
 	LDA	#STAADD
@@ -80,7 +77,8 @@ CLENUM	CLEAR	A
 	STA	IMSLEN
 	COMP	#STRLEN
 	JLT	CLENUM
-	CLEAR	A	.Input제대로 들어가게 하려고 clear안하면 junk처리가 된다.
+	CLEAR	A	.Input제대로 들어가게 하려고 clear안하면 junk처리 되는 듯
+	.CLEAR	T
 
 .INput LOOP
 ..Input을 받아옵니다.
@@ -103,8 +101,8 @@ INLOOP	TD	#0
 	CLEAR	A	.A 초기화
 
 .STRTMP
-..A에 TMPNUM 예전꺼 집어넣고 10곱해줘서 자릿수 맞추어줍니다.
-...6자리 넘어갈 경우 JUNK처리하고 버립니다.
+..A에 TMPNUM 예전꺼 집어넣고 10곱해줘서 자릿수 맞추어줌
+...6자리 넘어갈 경우 JUNK처리하고 버림
 ....그리고 S에 있던 이번에 읽어온 값을 1의 자리에 넣어주는 형식
 STRTMP	LDA	TMPNUM
 	MUL	#10
@@ -207,17 +205,16 @@ ENDINP	LDA	#100
 	CLEAR	S
 	LDA	#32	.띄어쓰기를 한번 한다. ver1.4 이거 수정할 수도 첫번째에 띄어쓰기 되어서;
 	WD	OUTDEV	.쓰기
-.	LDA	NUMADD
-.	COMP	PIVIND
-.	JEQ	PIVMAK
+	LDA	NUMADD
+	COMP	PIVIND
+	JEQ	PIVMAK
 	J	CALFIG
-..pivot을 표시하기 위해 사용되어진다.
-.PIVMAK	LDA	#124
-.	WD	OUTDEV
-.	LDA	#32
-.	WD	OUTDEV
-.	LDA	#0
-.	STA	INPLEN
+PIVMAK	LDA	#124
+	WD	OUTDEV
+	LDA	#32
+	WD	OUTDEV
+	LDA	#0
+	STA	INPLEN
 .CALFIG
 ..CALculate FIGure 는 자릿수를 계산해서 저장한 뒤 출력해준다.
 CALFIG	CLEAR	T
@@ -261,8 +258,6 @@ JZERO	LDA	FIGURE
 
 ....................Merge Sort Ready............................
 
-.MErGe MaSsGe
-..Merge Sort문자열을 출력해준다.
 MEGMSG	CLEAR	A
 	ADDR	L, A
 	STA	RETADD
@@ -276,7 +271,7 @@ MEGMSG	CLEAR	A
 	LDL	RETADD
 	LDA	#10
 	WD	OUTDEV
-	WD	OUTDEV
+	.WD	OUTDEV
 	CLEAR	X
 	LDA	#MEGLEN
 	SUB	#MEGTXT
@@ -285,50 +280,47 @@ MEGPRT	LDA	MEGTXT,	X
 	WD	OUTDEV
 	TIX	MEGLEN
 	JLT	MEGPRT	
+.	CLEAR	A
+.	CLEAR	X
+	.JSUB	MEGRDY
 
 ....................Merge Sort Processing.......................
 
 MEGRDY	CLEAR	A
 	CLEAR	X
 	LDA	INPNUM
-	STA	MEGNUM	.처음에 인풋 전체 길이를 받아온다.
+	STA	MEGNUM	.처음에 인풋 전체 길이를 받아옴
 	LDA	#STR1
-	STA	STAADD	.Input이 저장되어 있는 배열 첫번째 값의 주소를 STAADD에 저장한다.
+	STA	STAADD
 	LDA	#3
-	MUL	INPNUM	
+	MUL	INPNUM
 	ADD	STAADD
-	STA	ENDADD	.End Address를 구해 저장한다.
-	.MErGe Index
-	..Stack형식으로 재귀함수를 돌리기 위해 재귀로 들어갈 때마다 해당 함수의 Return Address/Start Address/Length를 저장한다.
-	..밑에서 이루어지는 과정은 MEGIND에 다음 주소값인 첫번째 Stack의 주소값을 저장하는 과정이다.
+	STA	ENDADD
 	LDA	#MEGIND
 	ADD	#3
 	STA	MEGIND
 	
 MEGINI	LDA	STAADD
 	SUB	#48	.16칸 뒤
-	STA	MSTIND	
-	.MSTIND는 Merge String Index를 나타낸다.
-	..해당 공간은  Merge Sorting를 위해 임시로 값들이 저장되어지는 공간이다. 
-
-	.밑의 프로세스는 Input이 저장되어져있는 공간에서 임시로 저장하는 공간인 MEGST1~에 저장하는 과정이다.
-	LDA	@STAADD	
-	STA	@MSTIND	 
+	STA	MSTIND
+	LDA	@STAADD	.48뺀곳에 저장		
+	STA	@MSTIND
 	LDA	#3
 	ADD	STAADD
 	STA	STAADD
 	COMP	ENDADD
 	JLT	MEGINI
-	.복사가 끝나면 다시 초기화를 해준다.
 	LDA	#STR1
 	STA	STAADD
 	LDA	#MEGST1
 	STA	MSTIND	
 
-MEGCHK	LDA	MEGNUM	.덩어리의 크기가 1이면 Index를 뒤로 물리고 return 한다.
+MEGCHK	LDA	MEGNUM	.지워도 됨
 	COMP	#1
+	.JEQ	MERGE
 	JGT	MERGE	.CALMEG로 이동 (3보다 작으면 1,2개 있다는 거니까 바로 계산해서 출력가능)
 	.해당 LOOP의 정보를 스택에 저장
+.길이 초기화해야할까..?
 	LDA	MEGIND
 	SUB	#9
 	STA	MEGIND
@@ -349,19 +341,18 @@ MERGE	CLEAR	A	.466
 	.LDA	#3
 	.ADD	MEGIND
 	.STA	MEGIND
-	..밑의 프로세스는 Stack에 해당 LOOP의 Return Address/Start Address/Length를 저장하는 과정이다.
 	ADDR	L, A
-	STA	@MEGIND	.Return Address
-	LDA	#3	
-	ADD	MEGIND
-	STA	MEGIND	
-	LDA	STAADD
-	STA	@MEGIND	.Start Address
+	STA	@MEGIND
 	LDA	#3
 	ADD	MEGIND
-	STA	MEGIND	
+	STA	MEGIND
+	LDA	STAADD
+	STA	@MEGIND
+	LDA	#3
+	ADD	MEGIND
+	STA	MEGIND
 	LDA	MEGNUM
-	STA	@MEGIND	.Length
+	STA	@MEGIND
 	LDA	#3
 	ADD	MEGIND
 	STA	MEGIND
@@ -381,91 +372,112 @@ MERGE	CLEAR	A	.466
 
 ..이제 나누기 시작
 . 첫번째 덩어리
-..첫번째 덩어리는 Start Address가 같다.
-ONEDIV	LDA	MEGNUM	.길이를 반으로 쪼개고 재귀함수를 돌린다.
+ONEDIV	LDA	MEGNUM
 	DIV	#2
 	STA	MEGNUM
+	COMP	#2
+	.JLT	TWODIV	
 	JSUB	MEGCHK	.4A7
 ..두번째 덩어리
-TWODIV	LDA	#3	
+.TWODIV	.LDA	MEGNUM
+	.DIV	#2
+	.MUL	#3
+	.ADD	STAADD
+	.STA	STAADD
+
+TWODIV	LDA	#3
 	ADD	MEGIND
 	STA	MEGIND
 	LDA	@MEGIND
-	STA	STAADD	.첫번째 덩어리가 끝나고 돌아온거라 Stack에서 해당 전체 loop의 Start Address를 꺼내온다.
+	STA	STAADD
+	LDA	#3
+	.LDA	#6
+
+	ADD	MEGIND
+	STA	MEGIND	.Length를 구하기 위해서(해당 Loop의 전체 Length - (전체 Length/2)를 해주면 남은 Length가 나온다)
+	LDA	@MEGIND
+	STA	MEGNUM
+
+	DIV	#2
+	MUL	#3
+	ADD	STAADD
+	STA	STAADD
 
 	LDA	#3
 	ADD	MEGIND
 	STA	MEGIND
-	LDA	@MEGIND	.Length
-	STA	MEGNUM
-	DIV	#2	
-	MUL	#3	
-	ADD	STAADD	
-	STA	STAADD	.두번째 덩어리 시작주소
-
-	LDA	#3	
-	ADD	MEGIND	
-	STA	MEGIND	
-	.Length를 구하기 위해서(해당 Loop의 전체 Length - (전체 Length/2)를 해주면 남은 Length가 나온다)
-	LDA	MEGNUM	
-	DIV	#2	
-	STA	TMPNUM	
-	LDA	MEGNUM	
-	SUB	TMPNUM	
-	STA	MEGNUM	
-	COMP	#2	
-	JSUB	MEGCHK	.재귀
-
-..변수 만들어주기(각 덩어리 처음 값 마지막 값, 길이?)
-...Merge Index One|  |  |  |Merge End One  ; 첫번째 덩어리
-...Merge Index Two|  |  |  |Merge End Two  ; 두번째 덩어리
-..두번째 덩어리가 끝나고 온 상태라 두번째 덩어리부터 채워준다.
-MAKEVA	LDA	STAADD	.두번째 덩어리 Start Address
-	STA	MINDT	
 	LDA	MEGNUM
+	DIV	#2
+	STA	TMPNUM
+	LDA	MEGNUM
+	SUB	TMPNUM
+	STA	MEGNUM
+	COMP	#2
+	.JLT	MAKEVA
+	JSUB	MEGCHK
+
+	.변수 만들어주기(각 덩어리 처음 값 마지막 값, 길이?)
+	..두번째 덩어리
+
+MAKEVA	LDA	STAADD
+	.SUB	#3
+	STA	MINDT
+	LDA	MEGNUM
+	.SUB	#1	.마지막 값을 나타내려면
 	MUL	#3
 	ADD	STAADD
-	STA	MENDT	.두번째 덩어리 End Address
+	STA	MENDT
+	.첫번째 덩어리
+	.LDA	=X'000111'
+	.AND	@MEGIND
+	.STA	MINDO	.Start Address
+	.LDA	@MEGIND
+	.SUB	MINDO
+	.SHIFTR	A, 12
+	.STA	@MEGIND
+	.LDL	@MEGIND	.Return Address
 	
-	LDL	@MEGIND	.Return Address
+	LDL	@MEGIND
 	LDA	#3
+	.LDA	#0
 	ADD	MEGIND
 	STA	MEGIND
 	LDA	@MEGIND	.Start Address
-	STA	MINDO	.첫번째 덩어리 Start Address
-	STA	STAADD	.해당 값을 전체 loop Start Address변수에 저장.
+	STA	MINDO
+	STA	STAADD
 	LDA	MEGIND
 	ADD	#3
 	STA	MEGIND
 	LDA	@MEGIND
+	.SUB	#2
+	.MUL	#3
 	DIV	#2
 	SUB	#1
+	.ADD	#1
 	MUL	#3
 	ADD	MINDO
-	STA	MENDO	.두번째 덩어리 Start Address
+	STA	MENDO
 	LDA	MEGIND
 	ADD	#3	
-	STA	MEGIND	
-	LDA	STAADD	
-	SUB	#48	
-	STA	MSTIND	
-	LDA	MENDT	
-	SUB	#48	
-	STA	ENDADD	
+	STA	MEGIND
+	LDA	STAADD
+	SUB	#48
+	STA	MSTIND
+	LDA	MENDT
+	SUB	#48
+	STA	ENDADD
 	.MSTLNE에 시작주소 넣어야하는데..
 	.계산 끝나고 4 뒤로 밀것
-
-.덩어리의 맨 앞의 값부터 비교 후 순서대로 저장.
 	CLEAR	S
 	CLEAR	T
-CALMEG	CLEAR	A	
-	COMPR	A, S	.첫번째 덩어리가 끝났는지 chk
-	JLT	MEGTWO	
-	COMPR	A, T	.두번째 덩어리가 끝났는지 chk
-	JLT	MEGONE	
-	LDA	@MINDO	.첫번째 덩어리의 값과 두번째 덩어리의 값을 차례대로 비교 후 임시 저장소에 순서대로 저장.
-	COMP	@MINDT	
-	JGT	MEGTWO	
+CALMEG	CLEAR	A
+	COMPR	A, S
+	JLT	MEGTWO
+	COMPR	A, T
+	JLT	MEGONE
+	LDA	@MINDO
+	COMP	@MINDT
+	JGT	MEGTWO
 
 	.one이 더 작을 때
 MEGONE	LDA	@MINDO	.573
@@ -473,6 +485,7 @@ MEGONE	LDA	@MINDO	.573
 	LDA	#3
 	ADD	MSTIND
 	STA	MSTIND
+	.SUB	#48
 	COMP	ENDADD	
 	JEQ	ENDMEG
 	JGT	ENDMEG
@@ -480,16 +493,18 @@ MEGONE	LDA	@MINDO	.573
 	ADD	MINDO
 	STA	MINDO
 	COMP	MENDO
+	.JEQ	ONEEND
 	JGT	ONEEND
 	J	CALMEG
 	
-	.Two가 더 작을 때
 MEGTWO	LDA	@MINDT
 	STA	@MSTIND
 	LDA	#3
 	ADD	MSTIND
 	STA	MSTIND
+	.SUB	#48
 	COMP	ENDADD
+	.JEQ	ENDMEG
 	JGT	ENDMEG
 	LDA	#3
 	ADD	MINDT
@@ -499,7 +514,6 @@ MEGTWO	LDA	@MINDT
 	JGT	TWOEND
 	J	CALMEG
 
-.각 덩어리가 끝났으면 다른 덩어리에 있는 값을 계속 저장.
 ONEEND	LDS	#1
 	J	CALMEG		
 TWOEND	LDT	#1
@@ -523,21 +537,16 @@ COPYST	LDA	@MSTIND
 	LDA	#10
 	WD	OUTDEV
 	WD	OUTDEV
-	
-	.계산된 값 출력
 	LDA	#91
 	WD	OUTDEV
 	CLEAR	X
 	JSUB	ENDINP
-	LDA	#32
-	WD	OUTDEV
 	LDA	#93
 	WD	OUTDEV
 	LDA	MEGIND
 	SUB	#9
 	STA	MEGIND
 	LDL	@MEGIND
-	
 	
 	CLEAR	A
 	STA	@MEGIND
@@ -546,6 +555,12 @@ COPYST	LDA	@MSTIND
 	STA	MEGIND
 	LDA	@MEGIND
 	STA	STAADD
+	.LDA	#3
+	.MUL	MEGNUM
+	.STA	TMPNUM
+	.LDA	STAADD
+	.SUB	TMPNUM
+	.STA	STAADD
 	CLEAR	A
 	STA	@MEGIND
 	LDA	#3
@@ -555,11 +570,12 @@ COPYST	LDA	@MSTIND
 	STA	MEGNUM
 	CLEAR	A
 	STA	@MEGIND
-.두개 읽어오고 해당 stack을 삭제해야하기 때문에
-..(2+3)*3 인 15를 빼준다.
+
+.길이 초기화해야할까..?
 	LDA	MEGIND
 	SUB	#15
 	STA	MEGIND
+	.STAADD - 3*(MEGNUM-1)
 	
 	RSUB	
 
@@ -567,7 +583,7 @@ COPYST	LDA	@MSTIND
 
 RESMSG	CLEAR	X
 	CLEAR	A
-	.STA	PIVIND
+	STA	PIVIND
 	LDA	#RESLEN
 	SUB	#RESTXT
 	STA	RESLEN
@@ -592,7 +608,7 @@ RESPRT	LDA	RESTXT, X
 	WD	OUTDEV
 	LDL	RETADD
 	RSUB
-.
+
 .교환 후에 TMPNXT 3증가 후 PIVIND와 비교
 .PIVIND보다 크지 않으면 BUBBLE로 이동해서 시작
 .TMPNXT > PIVIND 이면 PIVIND 3감소
@@ -605,6 +621,8 @@ ENDADD	RESW	1
 INPLEN	RESW	1		.각 SAMPLE 숫자 길이
 INPNUM	WORD	0		.각 SAMPLE Input 개수
 TMPNUM	RESW	1		.숫자를 임시로 저장해둔다.
+PIVIND	RESW	1		.PIVot INDex
+PIVNUM	RESW	1
 TMPIND	RESW	1
 TMPNXT	RESW	1
 
@@ -614,16 +632,14 @@ MENDO	RESW	1
 MINDT	RESW	1
 MENDT	RESW	1
 MEGNUM	RESW	1
-
 .STACK?
-MEGIND	RESW	1	.밑의 Stack의 주소값을 가리키는 공간	
-	RESW	3	.ReturnAddress(1Word) | StartAddress(1Word) | Length(1Word)
+MEGIND	RESW	1	.ReturnAddress(3) | StartAddress(3)
+	RESW	3
 	RESW	3
 	RESW	3
 	RESW	3
 	RESW	3	
 
-.Merge를 위해 임시로 저장되는 공간
 MEGST1	RESW	1
 MEGST2	RESW	1
 	RESW	1
@@ -641,7 +657,6 @@ MEGST2	RESW	1
 	RESW	1
 MSTIND	RESW	1
 
-.Input이 저장되는 공간
 STR1	RESW	1		.배열 시작
 STR2	RESW	1
 	RESW	1
@@ -660,16 +675,20 @@ STR2	RESW	1
 STRLEN	RESW	1
 
 FIGURE	WORD	100
-JUKCHK	WORD	0	.Junk인지 chk하기 위한 변수 (0 = not junk, 1 = junk)
+JUKCHK	WORD	0		.Junk인지 chk하기 위한 변수 (0 = not junk, 1 = junk)
 INDEV	BYTE	X'00'
 OUTDEV	BYTE	X'01'
 RETADD	RESW	1	.Main으로 Return Address
 PREADD	RESW	1	.Print하고 Sort로 Return Address
 CHOTXT	BYTE	C'  실행하고자 하는 정렬 방식을 입력해주십시오.'
 	BYTE	10
-	BYTE	C'  1. Merge Sort'
+	BYTE	C'  1. Insertion Sort'
 	BYTE	10
-	BYTE	C'  2. EXIT'
+	BYTE	C'  2. Bubble Sort'
+	BYTE	10
+	BYTE	C'  3. Merge Sort'
+	BYTE	10
+	BYTE	C'  4. EXIT'
 	BYTE	10
 CHOLEN	RESW	1
 IMSTXT	BYTE	C'  Input을 입력해주세요.(3자리까지 가능합니다)'		.Input MaSsage Text
@@ -682,7 +701,12 @@ IMSLEN	RESW	1
 RESTXT	BYTE	C'  Result'
 	BYTE	10
 RESLEN	RESW	1
-MEGTXT	BYTE	10
-	BYTE	C'  Merge Sort'
-
+INSTXT	BYTE	C'  Insertion Sort'
+	BYTE	10
+INSLEN	RESW	1
+BUBTXT	BYTE	C'  Bubble Sort'
+	BYTE	10
+BUBLEN	RESW	1
+MEGTXT	BYTE	C'  Merge Sort'
+	BYTE	10
 MEGLEN	RESW	1

@@ -1,67 +1,6 @@
 .Test입니다
 
-..Ver1.2
-...추가 사항
-....STRSAM에서 Indirect Addressing 삭제
-....주석 추가
-...문제점
-....그냥 frequency 줘서 Start버튼 눌러서 실행 시 숫자 입력이 제대로 되지 않는 듯 함. chk요망
-
-..........Ver1.3.................
-
-...추가 사항...
-....깜박하고 안적어서;
-....우선 Input 받은 거 Print까지 완료
-
-...문제점...
-....여전히 frequency를 주어야 정상 작동한다.
-....미리 값을 입력해놓으면 정상 작동하지만 멈춘 뒤 입력하려고 하면 불가능하다.
-....계속 알아볼 것.
-
-..........Ver1.4.................
-
-...추가 사항...
-....STRLEN, INSIND 추가
-....STR3, ... , STR15 삭제 .STR2까지만 남긴다.
-....PRINT, INSERT 추가
-
-...문제점...
-....
-
-..........Ver1.5.................
-...Insertion Sort 좀 정리한 거 같습니다..
-...
-
-..........Ver1.6.................
-...추가 사항...
-....지금 각 Step마다 PRINT를 해주고 PIVOT 자리에 |이건가 1자로 된거 집어 넣음 ASCII 124 사용
-....
-
-...문제점... 
-
-
-..........Ver1.7.................
-...frequency 해결
-...아... 중간에 0 있으면 표시 안됨,. 고쳐야 할듯 0이면 무조건 반환하는 거 고치기
-
-
-..........Insertion....
-...0출력 안되던거 수정
-
-
-...........Bubble....
-...
-
-
-
-
-
-
-
-
-
-
-TEST	START	0
+INSBUB	START	0
 CHOMSG	LDA	#95
 	WD	OUTDEV
 	TIX	#55
@@ -112,7 +51,7 @@ CHOSOT	JSUB	INSMSG
 
 
 ....................END........................
-	END	TEST
+	END	INSBUB
 EXIT	J	EXITTW	
 EXITTW	J	EXIT
 ...............................................
@@ -120,14 +59,12 @@ EXITTW	J	EXIT
 ....................Input Processing........................
 .Input Msg 출력
 INSAMP	CLEAR	X
-	.CLEAR	A
 	LDT	#5
 INPMSG	LDA	#10	
 	WD	OUTDEV
 	TIX	#2
 	JLT	INPMSG
 	CLEAR	X
-	.CLEAR	A
 	LDA	#IMSLEN
 	SUB	#IMSTXT
 	STA	IMSLEN
@@ -135,7 +72,6 @@ IMSPRT	LDA	IMSTXT, X
 	WD	OUTDEV
 	TIX	IMSLEN
 	JLT	IMSPRT
-	.CLEAR	A
 	CLEAR	X
 .#ZERO	~ #FIGURE CLEAR
 	LDA	#ZERO
@@ -147,8 +83,7 @@ CLENUM	CLEAR	A
 	STA	IMSLEN
 	COMP	#STRLEN
 	JLT	CLENUM
-	CLEAR	A	.Input제대로 들어가게 하려고 clear안하면 junk처리 되는 듯
-	.CLEAR	T
+	CLEAR	A	
 
 .INput LOOP
 ..Input을 받아옵니다.
@@ -196,7 +131,6 @@ JUNK	LDA	#1
 ...Junk일 경우 Clear Ready로 이동하여 TempNum을 비워준다.
 ....1줄씩 옮겨가려면 3byte를 이동해야해서 3에 input 숫자를 곱해준다.(0부터 시작; 0 = 1개, 1 = 2개)
 .....STArt ADDress에 첫번째 변수의 주소를 immediate addressing 을 통해 더해준다.
-.ENDFIL	CLEAR	A
 ENDFIL	LDA	JUKCHK	.Junk인지 check
 	COMP	#1
 	JEQ	CLERDY	.Junk면 다 폐기
@@ -227,8 +161,6 @@ STRSAM	LDA	TMPNUM
 
 .EOFCHK
 ..EOF CHecK 는 byte단위로 READ를 진행 중 'E'가 발견되었을 시에 이동되어 EOF를 체크한다.
-
-...EOF가 아닐 경우 공백을 만날 때까지 빼주어야하는 데 그건 좀 생각해보자.
 EOFCHK	RD	#0
 	COMP	#79
 	JEQ	EOFCHK
@@ -273,7 +205,7 @@ ENDINP	LDA	#100
 	LDA	@NUMADD	.해당 되는 주소의 값을 불러온다.
 	STA	TMPNUM	.TMPNUM에 해당 값을 저장한 뒤 S reg 를 초기화한다.
 	CLEAR	S
-	LDA	#32	.띄어쓰기를 한번 한다. ver1.4 이거 수정할 수도 첫번째에 띄어쓰기 되어서;
+	LDA	#32	
 	WD	OUTDEV	.쓰기
 	LDA	NUMADD
 	COMP	PIVIND
@@ -347,12 +279,6 @@ INSPRT	LDA	INSTXT,	X
 	WD	OUTDEV
 	TIX	INSLEN
 	JLT	INSPRT	
-.	CLEAR	A
-.	CLEAR	X
-	.JSUB	INSRDY
-
-
-
 
 ....................Insertion Sort Processing........................
 ...ver1.4꺼 일단 삭제 좀
@@ -448,8 +374,6 @@ LOSTEP	LDA	TMPNXT
 	WD	OUTDEV
 	WD	OUTDEV
 	J	RESMSG
-	.RSUB
-
 
 ....................Bubble Sorting Ready............................
 BUBMSG	CLEAR	A
@@ -471,9 +395,6 @@ BUBPRT	LDA	BUBTXT,	X
 	WD	OUTDEV
 	TIX	BUBLEN
 	JLT	BUBPRT	
-.	CLEAR	A
-.	CLEAR	X
-	.JSUB	BUBRDY
 
 ...................Bubble Sort Processing........................
 ....큰 LOOP
@@ -482,7 +403,6 @@ BUBRDY	CLEAR	A
 	LDA	INPNUM
 	SUB	#1
 	MUL	#3
-	.ADD	#3
 	ADD	#STR1	.마지막으로 들어온 값 주소 계산
 	STA	PIVIND	.마지막 주소값 PIVNUM에 저장
 .처음값 저장

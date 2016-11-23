@@ -1,59 +1,5 @@
-.Test입니다
 
-..Ver1.2
-...추가 사항
-....STRSAM에서 Indirect Addressing 삭제
-....주석 추가
-...문제점
-....그냥 frequency 줘서 Start버튼 눌러서 실행 시 숫자 입력이 제대로 되지 않는 듯 함. chk요망
-
-..........Ver1.3.................
-
-...추가 사항...
-....깜박하고 안적어서;
-....우선 Input 받은 거 Print까지 완료
-
-...문제점...
-....여전히 frequency를 주어야 정상 작동한다.
-....미리 값을 입력해놓으면 정상 작동하지만 멈춘 뒤 입력하려고 하면 불가능하다.
-....계속 알아볼 것.
-
-..........Ver1.4.................
-
-...추가 사항...
-....STRLEN, INSIND 추가
-....STR3, ... , STR15 삭제 .STR2까지만 남긴다.
-....PRINT, INSERT 추가
-
-...문제점...
-....
-
-..........Ver1.5.................
-...Insertion Sort 좀 정리한 거 같습니다..
-...
-
-..........Ver1.6.................
-...추가 사항...
-....지금 각 Step마다 PRINT를 해주고 PIVOT 자리에 |이건가 1자로 된거 집어 넣음 ASCII 124 사용
-....
-
-...문제점... 
-
-
-..........Ver1.7.................
-...frequency 해결
-...아... 중간에 0 있으면 표시 안됨,. 고쳐야 할듯 0이면 무조건 반환하는 거 고치기
-
-
-..........Insertion....
-...0출력 안되던거 수정
-
-
-...........Bubble....
-...
-
-
-TEST	START	0
+BUBSOT	START	0
 FIRST	JSUB	INSAMP	.Input
 
 
@@ -71,13 +17,11 @@ BUBPRT	LDA	BUBTXT,	X
 	WD	OUTDEV
 	TIX	BUBLEN
 	JLT	BUBPRT	
-.	CLEAR	A
-.	CLEAR	X
 	JSUB	BUBRDY
 
 
 ....................END........................
-	END	TEST
+	END	BUBSOT	
 EXIT	J	EXITTW	
 EXITTW	J	EXIT
 ...............................................
@@ -85,14 +29,12 @@ EXITTW	J	EXIT
 ....................Input Processing........................
 .Input Msg 출력
 INSAMP	CLEAR	X
-	.CLEAR	A
 	LDT	#5
 INPMSG	LDA	#10	
 	WD	OUTDEV
 	TIX	#25
 	JLT	INPMSG
 	CLEAR	X
-	.CLEAR	A
 	LDA	#IMSLEN
 	SUB	#IMSTXT
 	STA	IMSLEN
@@ -100,10 +42,9 @@ IMSPRT	LDA	IMSTXT, X
 	WD	OUTDEV
 	TIX	IMSLEN
 	JLT	IMSPRT
-	.CLEAR	A
 	CLEAR	X
 .#ZERO	~ #FIGURE CLEAR
-	LDA	#ZERO
+	LDA	#0
 	STA	IMSLEN
 CLENUM	CLEAR	A
 	STA	@IMSLEN
@@ -112,8 +53,7 @@ CLENUM	CLEAR	A
 	STA	IMSLEN
 	COMP	#STRLEN
 	JLT	CLENUM
-	CLEAR	A	.Input제대로 들어가게 하려고 clear안하면 junk처리 되는 듯
-	.CLEAR	T
+	CLEAR	A	
 
 .INput LOOP
 ..Input을 받아옵니다.
@@ -136,7 +76,7 @@ INLOOP	TD	#0
 	CLEAR	A	.A 초기화
 
 .STRTMP
-..A에 TMPNUM 예전꺼 집어넣고 10곱해줘서 자릿수 맞추어줌
+..A에 TMPNUM 예전꺼 집어넣고 10곱해줘서 자릿수 맞추어준다.
 ...6자리 넘어갈 경우 JUNK처리하고 버림
 ....그리고 S에 있던 이번에 읽어온 값을 1의 자리에 넣어주는 형식
 STRTMP	LDA	TMPNUM
@@ -298,7 +238,6 @@ BUBRDY	CLEAR	A
 	LDA	INPNUM
 	SUB	#1
 	MUL	#3
-	.ADD	#3
 	ADD	#STR1	.마지막으로 들어온 값 주소 계산
 	STA	PIVIND	.마지막 주소값 PIVNUM에 저장
 .처음값 저장
@@ -358,20 +297,20 @@ NOCHAN	LDA	TMPNXT
 	
 
 	
-ZERO	WORD	0		.ZERO 필요없지 않나?
-STAADD	RESW	1		.각 SAMPLE Input 시작 주소 Index값
-NUMADD	RESW	1		.각 SAMPLE Input 숫자 시작 주소 Index값
-				.ver1.3 출력용 indirect 주소저장소로 사
+.ZERO	WORD	0	
+STAADD	RESW	1	.각 SAMPLE Input 시작 주소 Index값
+NUMADD	RESW	1	.각 SAMPLE Input 숫자 시작 주소 Index값
+			.ver1.3 출력용 indirect 주소저장소로 사
 ENDADD	RESW	1
-INPLEN	RESW	1		.각 SAMPLE 숫자 길이
-INPNUM	WORD	0		.각 SAMPLE Input 개수
-TMPNUM	RESW	1		.숫자를 임시로 저장해둔다.
-PIVIND	RESW	1		.PIVot INDex
+INPLEN	RESW	1	.각 SAMPLE 숫자 길이
+INPNUM	WORD	0	.각 SAMPLE Input 개수
+TMPNUM	RESW	1	.숫자를 임시로 저장해둔다.
+PIVIND	RESW	1	.PIVot INDex
 PIVNUM	RESW	1
 TMPIND	RESW	1
 TMPNXT	RESW	1
-JUKCHK	WORD	0		.Junk인지 chk하기 위한 변수 (0 = not junk, 1 = junk)
-STR1	RESW	1		.배열 시작
+JUKCHK	WORD	0	.Junk인지 chk하기 위한 변수 (0 = not junk, 1 = junk)
+STR1	RESW	1	.배열 시작
 STR2	RESW	1
 	RESW	1
 	RESW	1
