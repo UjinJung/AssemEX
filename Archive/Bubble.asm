@@ -1,60 +1,97 @@
 .Test입니다
 
-INSBUB	START	0
-CHOMSG	LDA	#95
-	WD	OUTDEV
-	TIX	#55
-	JLT	CHOMSG
-	LDA	#10
-	WD	OUTDEV
+..Ver1.2
+...추가 사항
+....STRSAM에서 Indirect Addressing 삭제
+....주석 추가
+...문제점
+....그냥 frequency 줘서 Start버튼 눌러서 실행 시 숫자 입력이 제대로 되지 않는 듯 함. chk요망
+
+..........Ver1.3.................
+
+...추가 사항...
+....깜박하고 안적어서;
+....우선 Input 받은 거 Print까지 완료
+
+...문제점...
+....여전히 frequency를 주어야 정상 작동한다.
+....미리 값을 입력해놓으면 정상 작동하지만 멈춘 뒤 입력하려고 하면 불가능하다.
+....계속 알아볼 것.
+
+..........Ver1.4.................
+
+...추가 사항...
+....STRLEN, INSIND 추가
+....STR3, ... , STR15 삭제 .STR2까지만 남긴다.
+....PRINT, INSERT 추가
+
+...문제점...
+....
+
+..........Ver1.5.................
+...Insertion Sort 좀 정리한 거 같습니다..
+...
+
+..........Ver1.6.................
+...추가 사항...
+....지금 각 Step마다 PRINT를 해주고 PIVOT 자리에 |이건가 1자로 된거 집어 넣음 ASCII 124 사용
+....
+
+...문제점... 
+
+
+..........Ver1.7.................
+...frequency 해결
+...아... 중간에 0 있으면 표시 안됨,. 고쳐야 할듯 0이면 무조건 반환하는 거 고치기
+
+
+..........Insertion....
+...0출력 안되던거 수정
+
+
+...........Bubble....
+...작성 시작
+
+
+TEST	START	0
+FIRST	JSUB	INSAMP	.Input
+
+
+
+....................Bubble Sorting Ready............................
+
+BUBMSG	LDA	#10
 	WD	OUTDEV
 	WD	OUTDEV
 	CLEAR	X
-	LDA	#CHOLEN
-	SUB	#CHOTXT
-	STA	CHOLEN
-CHOPRT	LDA	CHOTXT, X
+	LDA	#BUBLEN
+	SUB	#BUBTXT
+	STA	BUBLEN
+BUBPRT	LDA	BUBTXT,	X	
 	WD	OUTDEV
-	TIX	CHOLEN
-	JLT	CHOPRT
-	LDA	#CHOSOT
-	STA	TMPIND
-	LDT	#8	.CHOSOT밑으로 몇칸씩 내려가야하는지
+	TIX	BUBLEN
+	JLT	BUBPRT	
 	CLEAR	A
-CHOICE	TD	#0
-	JEQ	CHOICE
-	RD	#0
-	STA	TMPNUM
-	COMP	#50
-	JGT	CHOICE
-	COMP	#49
-	JLT	CHOICE
-	JEQ	@TMPIND
-	COMP	#50
-	JEQ	EXIT
-	
-
-CHOSOT	JSUB	BUBMSG
 	CLEAR	X
-	J	CHOMSG
-
+	JSUB	BUBRDY
 
 
 ....................END........................
-	END	INSBUB
+	END	TEST
 EXIT	J	EXITTW	
 EXITTW	J	EXIT
 ...............................................
 
 ....................Input Processing........................
-.Input Msg 출력
 INSAMP	CLEAR	X
+	CLEAR	A
 	LDT	#5
-INPMSG	LDA	#10	
+INPMSG	LDA	#10
 	WD	OUTDEV
-	TIX	#2
+	TIX	#25
 	JLT	INPMSG
 	CLEAR	X
+	CLEAR	A
 	LDA	#IMSLEN
 	SUB	#IMSTXT
 	STA	IMSLEN
@@ -62,6 +99,7 @@ IMSPRT	LDA	IMSTXT, X
 	WD	OUTDEV
 	TIX	IMSLEN
 	JLT	IMSPRT
+	CLEAR	A
 	CLEAR	X
 .#ZERO	~ #FIGURE CLEAR
 	LDA	#ZERO
@@ -73,10 +111,9 @@ CLENUM	CLEAR	A
 	STA	IMSLEN
 	COMP	#STRLEN
 	JLT	CLENUM
-	CLEAR	A	
+	CLEAR	A
+	.CLEAR	T
 
-.INput LOOP
-..Input을 받아옵니다.
 INLOOP	TD	#0
 	JEQ	INLOOP
 	RD	#0
@@ -121,12 +158,17 @@ JUNK	LDA	#1
 ...Junk일 경우 Clear Ready로 이동하여 TempNum을 비워준다.
 ....1줄씩 옮겨가려면 3byte를 이동해야해서 3에 input 숫자를 곱해준다.(0부터 시작; 0 = 1개, 1 = 2개)
 .....STArt ADDress에 첫번째 변수의 주소를 immediate addressing 을 통해 더해준다.
-ENDFIL	LDA	JUKCHK	.Junk인지 check
+ENDFIL	CLEAR	A
+	LDA	JUKCHK	.Junk인지 check
 	COMP	#1
 	JEQ	CLERDY	.Junk면 다 폐기
 	CLEAR	A
 	LDA	#3	.시작주소 계산을 위해서
 	MUL	INPNUM	.INPut NUMber 는 0부터 시작하며 Input의 개수를 나타낸다.
+.ZERFIL	STA	STR1, X
+.	TIX	NUMADD
+.	JLT	ZERFIL
+.INDEX + 주소값
 	STA	STAADD
 .숫자 저장
 	CLEAR	X
@@ -151,13 +193,19 @@ STRSAM	LDA	TMPNUM
 
 .EOFCHK
 ..EOF CHecK 는 byte단위로 READ를 진행 중 'E'가 발견되었을 시에 이동되어 EOF를 체크한다.
+
+...EOF가 아닐 경우 공백을 만날 때까지 빼주어야하는 데 그건 좀 생각해보자.
 EOFCHK	RD	#0
 	COMP	#79
 	JEQ	EOFCHK
 	COMP	#70
 	CLEAR	A
 	CLEAR	X
+	.LDA	#3
+	.MUL	INPNUM
+	.STA	INPLEN
 	JEQ	ENDINP
+	.J	CLERDY
 
 .CLERDY
 ..CLEar ReaDY는 Temp Number를 초기화하기 전 준비 단계이다.
@@ -173,8 +221,8 @@ CLETMP	STA	TMPNUM, X
 	CLEAR	X
 	JEQ	INLOOP	
 
-.END INPut
-..END INPut는 현재 숫자 받아오는 것이 끝난 상태이며 임시로 저장해놓은 이름이고 바뀔 수도 있다.
+.EXITLP
+..EXIT LOOP는 현재 숫자 받아오는 것이 끝난 상태이며 임시로 저장해놓은 이름이고 바뀔 수도 있다.
 ...RSUB 추가 예정 ver1.1
 ...RSUB 추가 ver1.3
 ...Print로 이름 바꿀 수도 ver1.4
@@ -195,7 +243,7 @@ ENDINP	LDA	#100
 	LDA	@NUMADD	.해당 되는 주소의 값을 불러온다.
 	STA	TMPNUM	.TMPNUM에 해당 값을 저장한 뒤 S reg 를 초기화한다.
 	CLEAR	S
-	LDA	#32	
+	LDA	#32	.띄어쓰기를 한번 한다. ver1.4 이거 수정할 수도 첫번째에 띄어쓰기 되어서;
 	WD	OUTDEV	.쓰기
 	LDA	NUMADD
 	COMP	PIVIND
@@ -248,104 +296,65 @@ JZERO	LDA	FIGURE
 	JLT	ENDINP
 	RSUB	
 
-....................Bubble Sorting Ready............................
-BUBMSG	CLEAR	A
-	ADDR	L, A
-	STA	RETADD
-	LDA	#10
-	WD	OUTDEV
-	CLEAR	X
-	JSUB	INSAMP
-	LDL	RETADD
-	LDA	#10
-	WD	OUTDEV
-	WD	OUTDEV
-	CLEAR	X
-	LDA	#BUBLEN
-	SUB	#BUBTXT
-	STA	BUBLEN
-BUBPRT	LDA	BUBTXT,	X	
-	WD	OUTDEV
-	TIX	BUBLEN
-	JLT	BUBPRT	
+....................Bubble Sort Processing........................
 
-...................Bubble Sort Processing........................
 ....큰 LOOP
-BUBRDY	CLEAR	A
+INSRDY	CLEAR	A
 	CLEAR	X
-	LDA	INPNUM
-	SUB	#1
-	MUL	#3
-	ADD	#STR1	.마지막으로 들어온 값 주소 계산
-	STA	PIVIND	.마지막 주소값 PIVNUM에 저장
-.처음값 저장
-BUBBLE	LDA	#STR2	.Lable 필요할까?
+	STA	TMPNUM
+	LDA	#STR2
+	STA	PIVIND
+....큰 LOOP 시작과 동시에 작은 LOOP 준비?
+....큰 LOOP는 밑에서 비교해서 값 추가하는 방식으로 하고
+....작은 LOOP는 건너뛰는 방식으로
+....작은 LOOP를 밑에서 빠져나와서 PIVIND가 증가되고 TMPIND의 초기 값을 변경해주는 작업
+INSERT	CLEAR	A
+	CLEAR	S
+	LDA	@PIVIND
+	STA	PIVNUM
+	LDA	PIVIND
 	STA	TMPNXT
-BSTEP	LDA	TMPNXT
+..작은 LOOP시작
+...@TMPIND 값이랑 @(TMPIND+3)값이랑 비교
+...비교 후 끝이면 S reg에 1 저장 ( s = 1이면 작은 loop빠져 나옴)
+...크면 @(TMPIND+3) = @TMPIND
+...., 옮기기 후 S reg chk 0 이면 TMPIND = TMPIND-3 후 작은 loop 돌림
+...., 옮기기 후 1이면 작다로 이동
+...작으면 @(TMPIND+3) = PIVNUM 후 PIVIND = PIVIND+3 후 TMPIND클리어 후 큰 LOOP(INSERT)로 이동
+STEP	CLEAR	S
 	SUB	#3
 	STA	TMPIND
-	LDA	@TMPIND
-	COMP	@TMPNXT
-	.Index(A reg)가 크면 교환
-	..3증가 시켰을 떄 TMPNXT 값이 PIVIND보다 크거나 TMPIND가 PIVIND랑 같을 때 빠져나와서
-	..PIVIND를 3 줄여주고 BUBBLE로 이동해서 다시 시작
-	...PIVIND를 3 줄였을 때 STR1이랑 같으면 빠져나옴
-	JLT	NOCHAN	.교환 안해도 됨
-	LDA	@TMPIND
-	STA	TMPNUM
-	LDA	@TMPNXT
-	STA	@TMPIND
-	LDA	TMPNUM
-	STA	@TMPNXT
-	.교환 안해도 됨
-	.
-NOCHAN	LDA	TMPNXT
-	ADD	#3
-	STA	TMPNXT
-	COMP	PIVIND
-	JEQ	BSTEP
-	JLT	BSTEP
-	
-	CLEAR	A
-	ADDR	L, A
-	STA	RETADD
-	LDA	#10
-	WD	OUTDEV
-	LDA	#91
-	WD	OUTDEV
-	CLEAR	X
-	JSUB	ENDINP
-	LDA	#32
-	WD	OUTDEV
-	LDA	#93
-	WD	OUTDEV
-	LDL	RETADD
-	
-	LDA	PIVIND
-	SUB	#3
-	STA	PIVIND
+	LDT	PIVNUM
+	LDA	TMPIND
 	COMP	#STR1
-	JGT	BUBBLE	
-	LDA	#10
-	WD	OUTDEV
-	WD	OUTDEV
-	J	RESMSG
-
-......................Print Result..........................
-
-RESMSG	CLEAR	X
+	JEQ	NOEND
+	JGT	NOEND
+	LDS	#3	.작다에서 끝일 경우에 그냥 넣어야되니까		
+NOEND	LDA	@TMPIND
+	COMPR	A, T
+	JLT	LOSTEP
+	.A가 크면?
+	.@(TMPIND+3)(TMPNXT) = @TMPIND
+	LDA	@TMPIND
+	STA	@TMPNXT
+	LDA	PIVNUM
+	STA	@TMPIND
 	CLEAR	A
-	STA	PIVIND
-	LDA	#RESLEN
-	SUB	#RESTXT
-	STA	RESLEN
-RESPRT	LDA	RESTXT, X
-	WD	OUTDEV
-	TIX	RESLEN
-	JLT	RESPRT
+	COMPR	A, S
+	JGT	LOSTEP
+	LDA	TMPIND
+	STA	TMPNXT
+	J	STEP
+LOSTEP	LDA	TMPNXT
+	STA	TMPNXT
+	LDA	PIVNUM
+	STA	@TMPNXT
+	LDA	PIVIND
+	ADD	#3
+	STA	PIVIND	.먼저 프린트하고 L reg값 조작해서 RSUB로 돌아오면 되니까; 그리고 나서 증가시킬까...
 	CLEAR	A
 	ADDR	L, A
-	STA	RETADD
+	STA	RETADD	
 	LDA	#10
 	WD	OUTDEV
 	LDA	#91
@@ -356,17 +365,16 @@ RESPRT	LDA	RESTXT, X
 	WD	OUTDEV
 	LDA	#93
 	WD	OUTDEV
+	LDL	RETADD
+	
+.Pivot이 마지막 값인지 체크
+	LDA	NUMADD
+	ADD	#3
+	COMP	PIVIND
+	JGT	INSERT
 	LDA	#10
 	WD	OUTDEV
-	LDL	RETADD
 	RSUB
-
-.교환 후에 TMPNXT 3증가 후 PIVIND와 비교
-.PIVIND보다 크지 않으면 BUBBLE로 이동해서 시작
-.TMPNXT > PIVIND 이면 PIVIND 3감소
-..PIVIND 3감소 후 STR1과 비교 후 같으면 끝
-	
-
 	
 ZERO	WORD	0		.ZERO 필요없지 않나?
 STAADD	RESW	1		.각 SAMPLE Input 시작 주소 Index값
@@ -400,16 +408,8 @@ STRLEN	RESW	1
 FIGURE	WORD	100
 INDEV	BYTE	X'00'
 OUTDEV	BYTE	X'01'
-RETADD	RESW	1	.Main으로 Return Address
-PREADD	RESW	1	.Print하고 Sort로 Return Address
+RETADD	RESW	1
 
-CHOTXT	BYTE	C'  실행하고자 하는 정렬 방식을 입력해주십시오.'
-	BYTE	10
-	BYTE	C'  1. Bubble Sort'
-	BYTE	10
-	BYTE	C'  2. EXIT'
-	BYTE	10
-CHOLEN	RESW	1
 IMSTXT	BYTE	C'  Input을 입력해주세요.(3자리까지 가능합니다)'		.Input MaSsage Text
 	BYTE	10
 	BYTE	C'형식 : num num num num num EOF'
@@ -417,9 +417,6 @@ IMSTXT	BYTE	C'  Input을 입력해주세요.(3자리까지 가능합니다)'		.I
 	BYTE	C'(띄어쓰기로 구분해주시면 되고 15개까지 가능하며 끝은 EOF로 표시합니다)'
 	BYTE	10
 IMSLEN	RESW	1
-RESTXT	BYTE	C'  Result'
-	BYTE	10
-RESLEN	RESW	1
 BUBTXT	BYTE	C'  Bubble Sort'
 	BYTE	10
 BUBLEN	RESW	1

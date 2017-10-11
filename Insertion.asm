@@ -19,13 +19,13 @@ CHOPRT	LDA	CHOTXT, X
 	JLT	CHOPRT
 	LDA	#CHOSOT
 	STA	TMPIND
-	LDT	#8	.CHOSOT밑으로 몇칸씩 내려가야하는지
+.	LDT	#8	.CHOSOT밑으로 몇칸씩 내려가야하는지
 	CLEAR	A
 CHOICE	TD	#0
 	JEQ	CHOICE
 	RD	#0
 	STA	TMPNUM
-	COMP	#50
+	COMP	#50	.5까지/?
 	JGT	CHOICE
 	COMP	#49
 	JLT	CHOICE
@@ -33,12 +33,11 @@ CHOICE	TD	#0
 	COMP	#50
 	JEQ	EXIT
 	
+	....
 
-CHOSOT	JSUB	BUBMSG
+CHOSOT	JSUB	INSMSG
 	CLEAR	X
 	J	CHOMSG
-
-
 
 ....................END........................
 	END	INSBUB
@@ -248,8 +247,9 @@ JZERO	LDA	FIGURE
 	JLT	ENDINP
 	RSUB	
 
-....................Bubble Sorting Ready............................
-BUBMSG	CLEAR	A
+....................Insertion Sorting Ready............................
+
+INSMSG	CLEAR	A
 	ADDR	L, A
 	STA	RETADD
 	LDA	#10
@@ -261,71 +261,104 @@ BUBMSG	CLEAR	A
 	WD	OUTDEV
 	WD	OUTDEV
 	CLEAR	X
-	LDA	#BUBLEN
-	SUB	#BUBTXT
-	STA	BUBLEN
-BUBPRT	LDA	BUBTXT,	X	
+	LDA	#INSLEN
+	SUB	#INSTXT
+	STA	INSLEN
+INSPRT	LDA	INSTXT,	X	
 	WD	OUTDEV
-	TIX	BUBLEN
-	JLT	BUBPRT	
+	TIX	INSLEN
+	JLT	INSPRT	
 
-...................Bubble Sort Processing........................
+....................Insertion Sort Processing........................
+...ver1.4꺼 일단 삭제 좀
+...다시 생각한 거로 해보고 복구를 하든
+...ver1.4
+....Ready에서는 A X TMPNUM 클리어.
+....INSIND에 STR2주소값 저장. 3뺀거 TMPIND에 저장
 ....큰 LOOP
-BUBRDY	CLEAR	A
+INSRDY	CLEAR	A
 	CLEAR	X
-	LDA	INPNUM
-	SUB	#1
-	MUL	#3
-	ADD	#STR1	.마지막으로 들어온 값 주소 계산
-	STA	PIVIND	.마지막 주소값 PIVNUM에 저장
-.처음값 저장
-BUBBLE	LDA	#STR2	.Lable 필요할까?
-	STA	TMPNXT
-BSTEP	LDA	TMPNXT
-	SUB	#3
-	STA	TMPIND
-	LDA	@TMPIND
-	COMP	@TMPNXT
-	.Index(A reg)가 크면 교환
-	..3증가 시켰을 떄 TMPNXT 값이 PIVIND보다 크거나 TMPIND가 PIVIND랑 같을 때 빠져나와서
-	..PIVIND를 3 줄여주고 BUBBLE로 이동해서 다시 시작
-	...PIVIND를 3 줄였을 때 STR1이랑 같으면 빠져나옴
-	JLT	NOCHAN	.교환 안해도 됨
-	LDA	@TMPIND
 	STA	TMPNUM
-	LDA	@TMPNXT
-	STA	@TMPIND
-	LDA	TMPNUM
-	STA	@TMPNXT
-	.교환 안해도 됨
-	.
-NOCHAN	LDA	TMPNXT
-	ADD	#3
+	LDA	#STR2
+	STA	PIVIND
+....큰 LOOP 시작과 동시에 작은 LOOP 준비?
+....큰 LOOP는 밑에서 비교해서 값 추가하는 방식으로 하고
+....작은 LOOP는 건너뛰는 방식으로
+....작은 LOOP를 밑에서 빠져나와서 PIVIND가 증가되고 TMPIND의 초기 값을 변경해주는 작업
+.INSERT	CLEAR	A
+INSERT	CLEAR	S
+	LDA	@PIVIND
+	STA	PIVNUM
+	LDA	PIVIND
 	STA	TMPNXT
-	COMP	PIVIND
-	JEQ	BSTEP
-	JLT	BSTEP
-	
+..작은 LOOP시작
+...@TMPIND 값이랑 @(TMPIND+3)값이랑 비교
+...비교 후 끝이면 S reg에 1 저장 ( s = 1이면 작은 loop빠져 나옴)
+...크면 @(TMPIND+3) = @TMPIND
+...., 옮기기 후 S reg chk 0 이면 TMPIND = TMPIND-3 후 작은 loop 돌림
+...., 옮기기 후 1이면 작다로 이동
+...작으면 @(TMPIND+3) = PIVNUM 후 PIVIND = PIVIND+3 후 TMPIND클리어 후 큰 LOOP(INSERT)로 이동
+...| | |      |      | | |             | | | | |
+........TMPIND TMPNXT     PIVIND(PIVNUM)
+...
+INSTEP	CLEAR	S
+	SUB	#3
+	STA	TMPIND	.TMPNXT에서 3씩 빼서 TMPIND에 저장
+	LDT	PIVNUM	.T reg에 PIVNUM 저장, A reg에 TMPIND저장
+	LDA	TMPIND
+	COMP	#STR1	.STR1이랑 비교해서 마지막까지 왔는 지 chk
+	JEQ	NOEND
+	JGT	NOEND
+	LDS	#3	.마지막 값인데 작다로 끝날 경우에 그냥 넣어야되니까		
+.NO END
+..끝이 아니라면 Pivot 값 왼쪽으로 3씩 움직이면서 작은게 나오면 멈추고(왼쪽은 정렬되어있기때문에)
+..해당 자리에 값을 넣어주고 다 한칸씩 밀어준다.
+..주소값을 이동해야해서 Indirect Addressing을 사용한다.
+NOEND	LDA	@TMPIND
+	COMPR	A, T
+	JLT	LOSTEP
+	.A가 크면?
+	.@(TMPIND+3)(TMPNXT) = @TMPIND
+	LDA	@TMPIND
+	STA	@TMPNXT
+	LDA	PIVNUM
+	STA	@TMPIND
 	CLEAR	A
-	ADDR	L, A
-	STA	RETADD
-	LDA	#10
+	COMPR	A, S	.S가 크다는 말은 끝이라는 말이니까 저장하는 LOSTEP으로 간다.
+	JGT	LOSTEP
+	LDA	TMPIND
+	STA	TMPNXT
+	J	INSTEP
+..LOw STEP
+..Pivot보다 작은 값이 나오면 멈추고 그 자리에 값을 넣어준다.
+..작은 값을 발견하거나 마지막일 경우 해당 값이 그 순서이거나 제일 작기때문에 저장한다.
+LOSTEP	LDA	TMPNXT
+	STA	TMPNXT
+	LDA	PIVNUM
+	STA	@TMPNXT
+	LDA	PIVIND
+	ADD	#3
+	STA	PIVIND	
+	CLEAR	A
+	ADDR	L, A	.Return Address를 잠깐 RETADD에 저장해둔다.
+	STA	RETADD	
+	LDA	#10	.줄바꿈
 	WD	OUTDEV
-	LDA	#91
+	LDA	#91	.'[' ASCII CODE
 	WD	OUTDEV
 	CLEAR	X
 	JSUB	ENDINP
-	LDA	#32
+	LDA	#32	.공백
 	WD	OUTDEV
-	LDA	#93
+	LDA	#93	.']' ASCII CODE
 	WD	OUTDEV
-	LDL	RETADD
+	LDL	RETADD	.Return Address를 돌려준다.
 	
-	LDA	PIVIND
-	SUB	#3
-	STA	PIVIND
-	COMP	#STR1
-	JGT	BUBBLE	
+.Pivot이 마지막 값인지 체크
+	LDA	NUMADD
+	ADD	#3
+	COMP	PIVIND
+	JGT	INSERT
 	LDA	#10
 	WD	OUTDEV
 	WD	OUTDEV
@@ -360,12 +393,6 @@ RESPRT	LDA	RESTXT, X
 	WD	OUTDEV
 	LDL	RETADD
 	RSUB
-
-.교환 후에 TMPNXT 3증가 후 PIVIND와 비교
-.PIVIND보다 크지 않으면 BUBBLE로 이동해서 시작
-.TMPNXT > PIVIND 이면 PIVIND 3감소
-..PIVIND 3감소 후 STR1과 비교 후 같으면 끝
-	
 
 	
 ZERO	WORD	0		.ZERO 필요없지 않나?
@@ -405,7 +432,7 @@ PREADD	RESW	1	.Print하고 Sort로 Return Address
 
 CHOTXT	BYTE	C'  실행하고자 하는 정렬 방식을 입력해주십시오.'
 	BYTE	10
-	BYTE	C'  1. Bubble Sort'
+	BYTE	C'  1. Insertion Sort'
 	BYTE	10
 	BYTE	C'  2. EXIT'
 	BYTE	10
@@ -420,6 +447,6 @@ IMSLEN	RESW	1
 RESTXT	BYTE	C'  Result'
 	BYTE	10
 RESLEN	RESW	1
-BUBTXT	BYTE	C'  Bubble Sort'
+INSTXT	BYTE	C'  Insertion Sort'
 	BYTE	10
-BUBLEN	RESW	1
+INSLEN	RESW	1
